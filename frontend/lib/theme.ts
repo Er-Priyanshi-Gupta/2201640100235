@@ -6,22 +6,22 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#1976d2",
-      light: "#42a5f5",
-      dark: "#1565c0",
+      main: "#6366f1", 
+      light: "#8b5cf6", 
+      dark: "#4338ca",
     },
     secondary: {
-      main: "#dc004e",
-      light: "#ff5983",
-      dark: "#9a0036",
+      main: "#ec4899", 
+      light: "#f472b6", 
+      dark: "#be185d", 
     },
     background: {
-      default: "#fafafa",
+      default: "#fafaff", 
       paper: "#ffffff",
     },
     text: {
-      primary: "#333333",
-      secondary: "#666666",
+      primary: "#1e1b4b", 
+      secondary: "#64748b", 
     },
   },
   typography: {
