@@ -6,6 +6,8 @@ export interface GeolocationData {
   longitude?: number
 }
 
+import { logger } from "./logger"
+
 export const getGeolocationData = async (): Promise<GeolocationData> => {
   // Try browser geolocation first
   if (navigator.geolocation) {
@@ -20,6 +22,12 @@ export const getGeolocationData = async (): Promise<GeolocationData> => {
       // In a real application, you would use the coordinates to get location data
       // from a service like ipapi.co, ipgeolocation.io, or similar
       // For demo purposes, we'll return mock data based on common locations
+
+      logger.info("Geolocation obtained from browser", "Geolocation", {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      })
+
       return {
         country: "United States",
         region: "California",
@@ -28,7 +36,7 @@ export const getGeolocationData = async (): Promise<GeolocationData> => {
         longitude: position.coords.longitude,
       }
     } catch (error) {
-      console.log("Geolocation permission denied or unavailable")
+      logger.warn("Geolocation permission denied or unavailable", "Geolocation")
     }
   }
 
@@ -51,9 +59,12 @@ export const getGeolocationData = async (): Promise<GeolocationData> => {
     ]
 
     const randomLocation = mockLocations[Math.floor(Math.random() * mockLocations.length)]
+    logger.info("Using fallback location data", "Geolocation", { location: randomLocation })
     return randomLocation
   } catch (error) {
-    console.error("Failed to get IP-based location:", error)
+    logger.error("Failed to get IP-based location", "Geolocation", {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
   // Final fallback

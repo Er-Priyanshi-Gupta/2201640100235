@@ -1,4 +1,5 @@
 import type { ShortenedURL, ClickData } from "@/types/url-shortener"
+import { logger } from "./logger"
 
 export const saveUrlsToStorage = (urls: ShortenedURL[]): void => {
   if (typeof window === "undefined") return
@@ -7,8 +8,11 @@ export const saveUrlsToStorage = (urls: ShortenedURL[]): void => {
     const existingUrls = getUrlsFromStorage()
     const allUrls = [...existingUrls, ...urls]
     localStorage.setItem("shortenedUrls", JSON.stringify(allUrls))
+    logger.info("URLs saved to storage", "Storage", { count: urls.length, totalUrls: allUrls.length })
   } catch (error) {
-    console.error("Failed to save URLs to storage:", error)
+    logger.error("Failed to save URLs to storage", "Storage", {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 
@@ -39,8 +43,12 @@ export const updateUrlClickCount = (shortCode: string): void => {
       url.shortCode === shortCode ? { ...url, clickCount: url.clickCount + 1 } : url,
     )
     localStorage.setItem("shortenedUrls", JSON.stringify(updatedUrls))
+    logger.info("Click count updated", "Storage", { shortCode })
   } catch (error) {
-    console.error("Failed to update click count:", error)
+    logger.error("Failed to update click count", "Storage", {
+      shortCode,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 
@@ -51,8 +59,15 @@ export const saveClickData = (clickData: ClickData): void => {
     const existing = getClickDataFromStorage()
     const allClickData = [...existing, clickData]
     localStorage.setItem("clickData", JSON.stringify(allClickData))
+    logger.info("Click data saved", "Storage", {
+      shortCodeId: clickData.shortCodeId,
+      source: clickData.source,
+      location: clickData.geographicalLocation?.city,
+    })
   } catch (error) {
-    console.error("Failed to save click data:", error)
+    logger.error("Failed to save click data", "Storage", {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 
@@ -83,8 +98,14 @@ export const cleanupExpiredUrls = (): void => {
 
     if (activeUrls.length !== urls.length) {
       localStorage.setItem("shortenedUrls", JSON.stringify(activeUrls))
+      logger.info("Expired URLs cleaned up", "Storage", {
+        removedCount: urls.length - activeUrls.length,
+        remainingCount: activeUrls.length,
+      })
     }
   } catch (error) {
-    console.error("Failed to cleanup expired URLs:", error)
+    logger.error("Failed to cleanup expired URLs", "Storage", {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }

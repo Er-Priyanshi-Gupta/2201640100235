@@ -4,6 +4,7 @@ import { Card, CardContent, Typography, Box, Chip, IconButton, Alert, Link as Mu
 import { ContentCopy, OpenInNew } from "@mui/icons-material"
 import type { ShortenedURL } from "@/types/url-shortener"
 import { useState } from "react"
+import { logger } from "@/lib/logger"
 
 interface ShortenedURLsListProps {
   urls: ShortenedURL[]
@@ -17,8 +18,12 @@ export function ShortenedURLsList({ urls }: ShortenedURLsListProps) {
       await navigator.clipboard.writeText(`${window.location.origin}/${url}`)
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 2000)
+      logger.info("URL copied to clipboard", "ShortenedURLsList", { shortCode: url })
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error)
+      logger.error("Failed to copy to clipboard", "ShortenedURLsList", {
+        shortCode: url,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 

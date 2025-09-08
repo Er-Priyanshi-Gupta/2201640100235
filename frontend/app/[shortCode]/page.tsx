@@ -8,6 +8,7 @@ import { getUrlsFromStorage, updateUrlClickCount, saveClickData } from "@/lib/st
 import { getGeolocationData } from "@/lib/geolocation"
 import type { ShortenedURL, ClickData } from "@/types/url-shortener"
 import Link from "next/link"
+import { logger } from "@/lib/logger"
 
 export default function RedirectPage() {
   const params = useParams()
@@ -21,11 +22,14 @@ export default function RedirectPage() {
   useEffect(() => {
     const handleRedirect = async () => {
       try {
+        logger.info("Processing redirect request", "RedirectPage", { shortCode })
+
         // Get URLs from storage
         const urls = getUrlsFromStorage()
         const foundUrl = urls.find((u) => u.shortCode.toLowerCase() === shortCode.toLowerCase())
 
         if (!foundUrl) {
+          logger.warn("Short URL not found", "RedirectPage", { shortCode })
           setStatus("not-found")
           return
         }
@@ -35,6 +39,10 @@ export default function RedirectPage() {
         // Check if URL has expired
         const now = new Date()
         if (now > foundUrl.expiryDate) {
+          logger.warn("Short URL has expired", "RedirectPage", {
+            shortCode,
+            expiryDate: foundUrl.expiryDate.toISOString(),
+          })
           setStatus("expired")
           return
         }
@@ -44,6 +52,12 @@ export default function RedirectPage() {
 
         // Update click count
         updateUrlClickCount(foundUrl.shortCode)
+
+        logger.info("Redirecting to original URL", "RedirectPage", {
+          shortCode,
+          originalUrl: foundUrl.originalUrl,
+          clickCount: foundUrl.clickCount + 1,
+        })
 
         // Set redirecting status and start countdown
         setStatus("redirecting")
@@ -63,7 +77,10 @@ export default function RedirectPage() {
 
         return () => clearInterval(timer)
       } catch (error) {
-        console.error("Error handling redirect:", error)
+        logger.error("Error handling redirect", "RedirectPage", {
+          shortCode,
+          error: error instanceof Error ? error.message : String(error),
+        })
         setStatus("error")
       }
     }
@@ -88,14 +105,17 @@ export default function RedirectPage() {
 
       saveClickData(clickData)
 
-      console.log("[v0] Click tracked:", {
+      logger.info("Click tracked successfully", "RedirectPage", {
         shortCode: url.shortCode,
         source: clickData.source,
         location: geographicalLocation,
-        timestamp: clickData.timestamp,
+        timestamp: clickData.timestamp.toISOString(),
       })
     } catch (error) {
-      console.error("Error tracking click:", error)
+      logger.error("Error tracking click", "RedirectPage", {
+        shortCode: url.shortCode,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 

@@ -7,6 +7,7 @@ import type { URLFormData, ShortenedURL } from "@/types/url-shortener"
 import { validateUrl, validateShortcode } from "@/lib/validation"
 import { generateShortCode, createShortenedUrl } from "@/lib/url-utils"
 import { saveUrlsToStorage } from "@/lib/storage"
+import { logger } from "@/lib/logger"
 
 interface URLShortenerFormProps {
   onUrlsShortened: (urls: ShortenedURL[]) => void
@@ -91,6 +92,11 @@ export function URLShortenerForm({ onUrlsShortened }: URLShortenerFormProps) {
     if (!validateForms()) return
 
     setIsSubmitting(true)
+    logger.info("Starting URL shortening process", "URLShortenerForm", {
+      urlCount: urlForms.length,
+      hasCustomCodes: urlForms.some((form) => form.customShortcode),
+    })
+
     try {
       const shortenedUrls: ShortenedURL[] = []
 
@@ -108,6 +114,11 @@ export function URLShortenerForm({ onUrlsShortened }: URLShortenerFormProps) {
       // Save to localStorage
       saveUrlsToStorage(shortenedUrls)
 
+      logger.info("URLs shortened successfully", "URLShortenerForm", {
+        count: shortenedUrls.length,
+        shortCodes: shortenedUrls.map((url) => url.shortCode),
+      })
+
       // Notify parent component
       onUrlsShortened(shortenedUrls)
 
@@ -115,7 +126,9 @@ export function URLShortenerForm({ onUrlsShortened }: URLShortenerFormProps) {
       setUrlForms([{ originalUrl: "", validityPeriod: 30, customShortcode: "" }])
       setErrors([])
     } catch (error) {
-      console.error("Error shortening URLs:", error)
+      logger.error("Error shortening URLs", "URLShortenerForm", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       setErrors(["An error occurred while shortening URLs. Please try again."])
     } finally {
       setIsSubmitting(false)
