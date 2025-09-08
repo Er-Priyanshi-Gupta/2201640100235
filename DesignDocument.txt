@@ -1,0 +1,104 @@
+URL Shortener Web Application – Design Document
+Executive Summary
+
+This project is about building a client-side React app that lets users shorten URLs, create custom shortcodes, and track analytics like clicks and locations. The app will allow up to five active shortened URLs at once, give users control over expiry periods, and display insights in a clean dashboard.
+
+Key Architectural Decisions
+1. Technology Stack
+
+Frontend Framework: React (18+)
+Chosen because React was required, and it provides a strong component model, good ecosystem, and routing support.
+Styling: Material UI (v5+)
+Required for this project. Brings consistent design, accessibility, and responsive layouts.
+State Management: React Context + useReducer
+No external library needed — React’s built-in patterns are enough for this scale.
+Routing: React Router v6
+Handles navigation, redirects, and nested routes cleanly.
+
+2. Data Modeling
+
+We’ll keep everything client-side. Here are the main structures:
+ShortenedURL → stores original link, short code, creation/expiry times, click counts, etc.
+ClickData → logs each click with timestamp, referrer, location, and device info.
+AppState → central store with lists of URLs, analytics, and up to 5 active URLs.
+Storage:
+localStorage → keeps historical data across sessions.
+sessionStorage → manages the 5 active URLs for the current session.
+Expired URLs will be automatically cleaned up either on load or by a background timer.
+
+3. Routing & URL Handling
+
+Main routes will be:
+/ → homepage with URL shortener
+/stats → analytics dashboard
+/:shortCode → redirect handler
+/404 → invalid shortcode page
+Redirect flow:
+Check if the shortcode exists and is valid.
+Log the click (time, source, location).
+Redirect to the original URL or show an error page.
+Shortcode generation:
+Custom codes: must be alphanumeric, 3–10 characters.
+Auto codes: 6-character Base62 string with collision checks.
+
+4. User Experience Design
+
+Single-page focus: Keep the interface simple.
+Progressive disclosure: Hide advanced options (expiry time, custom codes) until needed.
+Feedback: Real-time validation and clear success/error states.
+Responsive: Designed mobile-first, following Material UI breakpoints.
+
+5. Error Handling
+
+Validation rules:
+URLs must start with http:// or https:// and be under 2048 chars.
+Custom codes must match /^[a-zA-Z0-9]{3,10}$/.
+Validity period defaults to 30 minutes (max: 1 week).
+
+Error handling:
+Inline errors for form validation.
+Toasts for system/network issues.
+Auto-retry for shortcode collisions.
+
+6. Analytics & Tracking
+
+Track clicks with timestamp, source, device info, and (when possible) location.
+Respect privacy — no personal data stored.
+Dashboard will show:
+Total clicks & active status of each URL.
+Trends over time.
+Where users are coming from (geography + referrers).
+
+7. Performance Optimization
+
+Code splitting and lazy loading for heavy parts (like charts).
+React.memo for expensive renders.
+Tree-shaking unused Material UI components.
+Optimize bundle size and localStorage usage.
+
+8. Security Considerations
+
+Validate and sanitize all user input.
+Prevent malicious shortcode injection.
+Don’t store sensitive info in localStorage.
+Apply client-side throttling to avoid spam.
+
+9. Assumptions & Constraints
+
+Runs only in modern browsers with ES6+ and localStorage.
+No backend — everything is client-side.
+No authentication — everyone can use it freely.
+Limited to 5 active URLs per session.
+Must use Material UI.
+Quick turnaround: ~2 hours for implementation.
+
+10. Implementation Plan
+
+Phase 1 – Core (60 min):
+URL shortening, validation, collision handling, storage, and routing.
+
+Phase 2 – Analytics & UI (45 min):
+Click tracking, dashboard, Material UI styling, error handling.
+
+Phase 3 – Testing & Polishing (15 min):
+Browser testing, performance checks, and edge-case handling.
